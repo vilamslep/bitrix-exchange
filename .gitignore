@@ -2,3 +2,4 @@ kafka/data/*
 zookeeper/data/*
 kafka/downloads/*
 zookeeper/downloads/*
+.vscode

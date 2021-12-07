@@ -25,6 +25,20 @@ services:
       - ./kafka/conf:/opt/kafka/config
       - ./kafka/data:/tmp/kafka-logs
 
+  registrar:
+    container_name: registrar
+    build: registrar/
+    depends_on:
+      - kafka
+    ports:
+      - 15643:8082
+    environment:
+      - KAFKA_HOST=kafka
+      - KAFKA_PORT=9092
+      - SERVICE_PORT=8082
+      - KAFKA_TOPIC=changes
+      - KAFKA_TOPIC_PARTITION=0
+  
 networks:
   default:
     external:
