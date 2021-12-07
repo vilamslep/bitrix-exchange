@@ -25,8 +25,8 @@ services:
       - ./kafka/conf:/opt/kafka/config
       - ./kafka/data:/tmp/kafka-logs
 
-  registrar:
-    container_name: registrar
+  registrar-client:
+    container_name: registrar-client
     build: registrar/
     depends_on:
       - kafka
@@ -35,10 +35,30 @@ services:
     environment:
       - KAFKA_HOST=kafka
       - KAFKA_PORT=9092
-      - SERVICE_PORT=8082
       - KAFKA_TOPIC=changes
       - KAFKA_TOPIC_PARTITION=0
-  
+      - KAFKA_MESSAGE_KEY=client
+      - SERVICE_PORT=8082
+      - SERVICE_METHOD=client
+      - SERVICE_CHECK_INPUT=1
+
+  registrar-tocrm:
+    container_name: registrar-crm
+    build: registrar/
+    depends_on:
+      - kafka
+    ports:
+      - 15644:8082
+    environment:
+      - KAFKA_HOST=kafka
+      - KAFKA_PORT=9092
+      - KAFKA_TOPIC=tocrm
+      - KAFKA_TOPIC_PARTITION=0
+      - KAFKA_MESSAGE_KEY=client
+      - SERVICE_PORT=8082
+      - SERVICE_METHOD=to-crm
+      - SERVICE_CHECK_INPUT=0 
+           
 networks:
   default:
     external:
