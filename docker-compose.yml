@@ -25,40 +25,61 @@ services:
       - ./kafka/conf:/opt/kafka/config
       - ./kafka/data:/tmp/kafka-logs
 
-  registrar-client:
-    container_name: registrar-client
-    build: registrar/
+  registrar-changes:
+    container_name: registrar-changes
+    build: registrar-changes/
     depends_on:
       - kafka
     ports:
       - 15643:8082
     environment:
-      - KAFKA_HOST=kafka
+      - KAFKA_HOST=172.19.0.3
       - KAFKA_PORT=9092
       - KAFKA_TOPIC=changes
       - KAFKA_TOPIC_PARTITION=0
-      - KAFKA_MESSAGE_KEY=client
+      - KAFKA_TOPIC_MESSAGE_KEY=client
       - SERVICE_PORT=8082
-      - SERVICE_METHOD=client
-      - SERVICE_CHECK_INPUT=1
+      - SERVICE_REST_METHOD=client
 
   registrar-tocrm:
-    container_name: registrar-crm
-    build: registrar/
+    container_name: registrar-tocrm
+    build: registrar-tocrm/
     depends_on:
       - kafka
     ports:
       - 15644:8082
     environment:
-      - KAFKA_HOST=kafka
+      - KAFKA_HOST=172.19.0.3
       - KAFKA_PORT=9092
       - KAFKA_TOPIC=tocrm
       - KAFKA_TOPIC_PARTITION=0
       - KAFKA_MESSAGE_KEY=client
       - SERVICE_PORT=8082
-      - SERVICE_METHOD=to-crm
-      - SERVICE_CHECK_INPUT=0 
-           
+      - SERVICE_REST_METHOD=to-crm
+  
+  consumer-preparing:
+    container_name: consumer-preparing
+    build: consumer-generator/
+    depends_on:
+      - registrar-changes
+      - registrar-tocrm
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_CONSUMER_GROUP_ID=preparing
+      - KAFKA_TOPIC=changes
+      - DATABASE_ENDPOINT=http://host.ru
+      - REGISTRAR_ENDPOINT=http://registrar-tocrm:8082/tocrm
+  consumer-tocrm:
+    container_name: consumer-tocrm
+    build: consumer-tocrm/
+    depends_on:
+      - registrar-changes
+      - registrar-tocrm
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_CONSUMER_GROUP=preparing
+      - KAFKA_TOPIC=changes
+      - BITRIX24_REST_URL=https://domain.bitrix24.ru/rest/
 networks:
   default:
     external:
