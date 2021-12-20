@@ -12,6 +12,8 @@ EXPOSE 9092
 
 WORKDIR /opt/kafka
 
+COPY ./create_topics.sh /opt/kafka
+
 VOLUME ["/opt/kafka/config", "/tmp/kafka-logs"]
 
 ENTRYPOINT ["/opt/kafka/bin/kafka-server-start.sh"]
