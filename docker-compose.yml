@@ -10,7 +10,6 @@ services:
     volumes:                                                                                                                                                             
       - ./zookeeper/conf:/opt/zookeeper/conf                                                                                                                             
       - ./zookeeper/data:/tmp/zookeeper                                                                                                                                  
-                                                                                                                                                                         
   kafka:                                                                                                                                                                 
     container_name: kafka                                                                                                                                                
     build: kafka/                                                                                                                                                        
@@ -25,7 +24,7 @@ services:
       - ./kafka/data:/tmp/kafka-logs   
   producer-api-changes:
     container_name: producer-api-changes
-    build: producer-api-changes/
+    build: producer-api/
     depends_on:
       - kafka
     ports:
@@ -38,18 +37,44 @@ services:
       - KAFKA_TOPIC=changes
   producer-api-tocrm:
     container_name: producer-api-tocrm
-    build: producer-api-changes/
+    build: producer-api/
     depends_on:
       - kafka
     ports:
       - 16000:15000
     environment:
       - HTTP_PORT=15000
-      - HTTP_CHECK_INPUT=0
       - KAFKA_HOST=kafka
       - KAFKA_PORT=9092
       - KAFKA_TOPIC=tocrm
+  consumer-changes:                                                                                                                                                      
+    container_name: consumer-changes                                                                                                                                     
+    build: consumer-changes/                                                                                                                                             
+    depends_on:                                                                                                                                                          
+      - kafka                                                                                                                                                            
+      - producer-api-tocrm                                                                                                                                               
+    environment:                                                                                                                                                         
+      - KAFKA_BROKERS=kafka:9092                                                                                                                                         
+      - KAFKA_TOPIC=changes                                                                                                                                              
+      - KAFKA_GROUP_ID=preparing                                                                                                                                         
+      - GENERATOR_HOST=                                                                                                                                      
+      - GENERATOR_PORT=25473                                                                                                                                             
+      - TARGET_HOST=producer-api-tocrm                                                                                                                                   
+      - TARGET_PORT=15000 
+  consumer-tocrm:                                                                                                                                                      
+    container_name: consumer-tocrm                                                                                                                                     
+    build: consumer-tocrm/                                                                                                                                             
+    depends_on:
+      - kafka                                                                                                                                                            
+      - producer-api-tocrm                                                                                                                                               
+    environment:          
+      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_GROUP_ID=crm
+      - KAFKA_TOPIC=tocrm
+      - TARGET_HOST=
+      - TARGET_SSL=1
+      - TARGET_METHOD=
 networks:                                                                                                                                                                
   default:                                                                                                                                                               
     external:                                                                                                                                                            
-      name: kafka        
+      name: kafka    
