@@ -1,6 +1,6 @@
 FROM golang:alpine
 
-RUN wget -O src/main.zip https://github.com/vi-la-muerto/bx24sync/archive/refs/heads/main.zip \
+RUN wget -O src/main.zip https://github.com/vilamslep/bx24sync/archive/refs/heads/main.zip \
   && unzip src/main.zip -d src/ && cd src/bx24sync-main/ \
   && go build -o /go/bin/ main/consumer-tocrm/app.go
 
